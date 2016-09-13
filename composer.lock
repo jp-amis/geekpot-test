@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "8669ff90dc206c5d83e99d4e20d767aa",
-    "content-hash": "b8b72333655470ea4a61d2f9016c4715",
+    "hash": "5d2a0e247fb9a9c6429f8f063c6d1d59",
+    "content-hash": "0c76b36a72251ce15b6545b2cd849d7e",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -1183,6 +1183,62 @@
             "description": "The Illuminate View package.",
             "homepage": "https://laravel.com",
             "time": "2016-08-24 08:31:50"
+        },
+        {
+            "name": "jenssegers/optimus",
+            "version": "v0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jenssegers/optimus.git",
+                "reference": "86d94fb00a685769b743d5e3be2b18282830505c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jenssegers/optimus/zipball/86d94fb00a685769b743d5e3be2b18282830505c",
+                "reference": "86d94fb00a685769b743d5e3be2b18282830505c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpseclib/phpseclib": "^2.0",
+                "phpunit/phpunit": "^4.0|^5.0",
+                "satooshi/php-coveralls": "^1.0",
+                "symfony/console": "^2.6|^2.0"
+            },
+            "suggest": {
+                "ext-gmp": "Required for 32bit systems"
+            },
+            "bin": [
+                "optimus"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jenssegers\\Optimus\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jens Segers",
+                    "homepage": "https://jenssegers.com"
+                }
+            ],
+            "description": "Id obfuscation based on Knuth's integer hash method",
+            "homepage": "https://github.com/jenssegers/optimus",
+            "keywords": [
+                "hashids",
+                "id obfuscation",
+                "ids",
+                "obfuscation",
+                "optimus"
+            ],
+            "time": "2016-02-20 22:12:18"
         },
         {
             "name": "laravel/lumen-framework",

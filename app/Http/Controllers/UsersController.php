@@ -40,13 +40,15 @@ class UsersController extends Controller
         $user->save();
 
         Mail::raw('Hi! Welcome to GeekPot IT Consulting API server.' . PHP_EOL . 'Follow in the the attachment is your credentials.',
-            function ($msg) use($user) {
+            function ($msg) use ($user) {
                 $msg->subject('Welcome!');
-                $msg->attachData('API Key,API Secret' . PHP_EOL . $user->api_key.','.$user->getApiSecret(), 'credentials.csv',
-                    [ 'mime' => 'text/csv' ]);
+                $msg->attachData('API Key,API Secret' . PHP_EOL . $user->api_key . ',' . $user->getApiSecret(),
+                    'credentials.csv', [ 'mime' => 'text/csv' ]);
                 $msg->to([ $user->email ]);
             });
 
-        return response()->json([ 'created' => true ], 201);
+        return response()->json([ 'created' => true ], 201, [
+            'Location' => route('users.show', [ 'id' => $user->obfuscateId() ])
+        ]);
     }
 }

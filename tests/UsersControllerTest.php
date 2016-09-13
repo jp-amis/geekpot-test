@@ -24,7 +24,7 @@ class UsersControlerTest extends TestCase
             'password' => '123321'
         ]);
 
-        $this->seeStatusCode(201);
+        $this->seeStatusCode(201)->seeHeaderWithRegExp('Location', '#/users/[\d]+$#');
     }
 
 

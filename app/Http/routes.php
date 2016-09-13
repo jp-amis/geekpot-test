@@ -1,6 +1,16 @@
 <?php
 
-// list all users
-$app->get('/api/v1/users', 'UsersController@index');
-// register new user
-$app->post('/api/v1/users', 'UsersController@store');
+$app->get('/api/v1/users', [
+    'as' => 'users.index',
+    'uses' => 'UsersController@index'
+]);
+
+$app->post('/api/v1/users', [
+    'as' => 'users.store',
+    'uses' => 'UsersController@store'
+]);
+
+$app->post('/api/v1/users/{id}', [
+    'as' => 'users.show',
+    'uses' => 'UsersController@show'
+]);
