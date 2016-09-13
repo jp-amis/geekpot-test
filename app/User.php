@@ -13,6 +13,20 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 class User extends Model
 {
 
+    public static $PERM_ADMIN = 1;
+    public static $PERM_NORMAL = 0;
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at'
+    ];
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -41,6 +55,12 @@ class User extends Model
         $optimus = new Optimus(1109591831, 1913168039, 1504045762);
 
         return $optimus->encode($this->id);
+    }
+
+    public static function getIdFromObfuscation($id) {
+        $optimus = new Optimus(1109591831, 1913168039, 1504045762);
+
+        return $optimus->decode($id);
     }
 
 

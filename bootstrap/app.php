@@ -51,13 +51,13 @@ $app->singleton(Illuminate\Contracts\Console\Kernel::class, App\Console\Kernel::
 |
 */
 
-// $app->middleware([
-//    App\Http\Middleware\ExampleMiddleware::class
-// ]);
+ $app->middleware([
+    //App\Http\Middleware\AuthMiddleware::class
+ ]);
 
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+ $app->routeMiddleware([
+     'authToken' => App\Http\Middleware\AuthMiddleware::class,
+ ]);
 
 /*
 |--------------------------------------------------------------------------

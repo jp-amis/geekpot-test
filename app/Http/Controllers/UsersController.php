@@ -51,4 +51,28 @@ class UsersController extends Controller
             'Location' => route('users.show', [ 'id' => $user->obfuscateId() ])
         ]);
     }
+
+    /**
+     * GET /users/{id}
+     * @return array
+     */
+    public function show(Request $request, $id) {
+        if($request->attributes->get('token')->user->perm == User::$PERM_NORMAL
+            && $request->attributes->get('token')->user->obfuscateId() != $id) {
+            return response()->json([ 'error' => 'You don\'t have acess to this resource'], 403, [
+                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+            ]);
+        }
+        $user = User::find(User::getIdFromObfuscation($id));
+
+        if(!$user) {
+            return response()->json([ 'error' => 'User not found' ], 404, [
+                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+            ]);
+        } else {
+            return response()->json([ 'email' => $user->email, 'created_at' => $user->created_at->toW3cString() ], 200, [
+                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+            ]);
+        }
+    }
 }

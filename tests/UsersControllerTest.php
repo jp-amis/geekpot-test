@@ -4,6 +4,15 @@ use Laravel\Lumen\Testing\DatabaseTransactions;
 
 class UsersControlerTest extends TestCase
 {
+    protected function getUser() {
+        $user = new \App\User;
+        $user->email = uniqid().'@test.com';
+        $user->password = -1;
+        $user->setApiKey();
+        $user->save();
+
+        return $user;
+    }
 
     public function testV1StoreShouldSaveNewUserInDatabase()
     {
@@ -61,6 +70,77 @@ class UsersControlerTest extends TestCase
     public function testV1StoreReturns422StatusCodeWhenInvalidRequest()
     {
         $this->post('/api/v1/users', [ ])->seeStatusCode(\Illuminate\Http\Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+
+    // show
+    public function testV1ShowShouldReturnStatus200AndUserDataIfRequestSuccesfull() {
+        $user = $this->getUser();
+        
+        $this->get('/api/v1/users/'.$user->obfuscateId(), [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeJsonStructure(['email', 'created_at']);
+    }
+
+    public function testV1ShowShouldReturnStatus403IfTheUserDoesntHavePermission() {
+        $userToGet = $this->getUser();
+
+        $user = $this->getUser();
+
+        $this->get('/api/v1/users/'.$userToGet->obfuscateId(), [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+    }
+
+    public function testV1ShowShouldReturnStatus400IfTheUserProvidesAnInvalidatedAccessToken() {
+        $userToGet = $this->getUser();
+
+        $user = $this->getUser();
+
+        $accessToken = \App\AccessToken::generate($user, true);
+        $accessToken->updated_at = \Carbon\Carbon::now()->subHour();
+        $accessToken->save();
+
+        $this->get('/api/v1/users/'.$user->obfuscateId(), [
+            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(400);
+    }
+
+    public function testV1ShowShouldReturnANewAccessTokenIfTheOldOneNeedsToRefresh() {
+        $userToGet = $this->getUser();
+
+        $user = $this->getUser();
+
+        $accessToken = \App\AccessToken::generate($user, true);
+        $accessToken->updated_at = \Carbon\Carbon::now()->subMinute(10);
+        $accessToken->save();
+
+        $this->get('/api/v1/users/'.$user->obfuscateId(), [
+            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeHasHeader('Authorization');
+        $this->assertNotEquals($this->response->headers->get('Authorization'), 'Bearer '.$accessToken->token);
+    }
+
+    public function testV1ShowShouldReturn404IfUserNotFound() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->get('/api/v1/users/0000000', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(404);
     }
 
 }

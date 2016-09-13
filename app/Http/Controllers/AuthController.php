@@ -20,13 +20,13 @@ class AuthController extends Controller
     {
 
         if(!$request->hasHeader('Authorization')) {
-            return response()->json([ 'error' => 'Invalid authorization header' ], Response::HTTP_BAD_REQUEST);
+            return response()->json([ 'error' => 'Invalid authorization header' ], 400);
         }
 
         $authorization = $request->header('Authorization');
         $authorization = explode('Bearer ', $authorization);
         if(sizeof($authorization) != 2 || $authorization[0] != "") {
-            return response()->json([ 'error' => 'Invalid authorization header' ], Response::HTTP_BAD_REQUEST);
+            return response()->json([ 'error' => 'Invalid authorization header' ], 400);
         }
         $authorization = explode(":", $authorization[1]);
 
@@ -38,8 +38,6 @@ class AuthController extends Controller
         if($authorization[1] != hash_hmac('sha1', $user->api_key, $user->getApiSecret())) {
             return response()->json([ 'error' => 'Invalid signature' ], 400);
         }
-
-
 
         return response()->json([], 204, [
             'Authorization' => 'Bearer '.Accesstoken::generate($user)
