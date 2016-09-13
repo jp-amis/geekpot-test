@@ -37,9 +37,9 @@ class AuthMiddleware
             return response()->json([ 'error' => 'Invalid Access Token' ], 400);
         }
 
-        if($authorization[1] != hash_hmac('sha1', json_encode($request->all()), $accessToken->user->getApiSecret())) {
+        if($authorization[1] != hash_hmac('sha1', sizeof($request->all()) ? json_encode($request->all()) : '{}', $accessToken->user->getApiSecret())) {
             return response()->json([ 'error' => 'Invalid signature' ], 400, [
-                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+                'Authorization' => 'Bearer '.$accessToken->refresh()
             ]);
         }
 

@@ -12,6 +12,9 @@ The test was made with Lumen framework, the documentation can be found on the [L
 6. Como administrador da API eu devo poder listar e visualizar detalhes de todos os usuários registrados. 
 7. Como administrador da API eu devo poder alterar, suspender o acesso e deletar qualquer usuário registrado. 
 8. Como administrador da API eu devo poder listar todos os usuários deletados.
+ 
+4. Como cliente da API eu devo ter um método de lookup, onde posso requisitar a lista de todos os resources e métodos aos quais tenho permissão de acessar.  
+7. Como administrador da API eu devo poder alterar, suspender o acesso e deletar qualquer usuário registrado. 
 
 ## API
 

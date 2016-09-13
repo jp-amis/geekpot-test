@@ -15,9 +15,36 @@ class UsersController extends Controller
      * GET /users
      * @return array
      */
-    public function index()
+    public function index(Request $request)
     {
-        return [ ];
+        if ($request->attributes->get('token')->user->perm != User::$PERM_ADMIN) {
+            return response()->json([ 'error' => 'You don\'t have acess to this resource' ], 403, [
+                'Authorization' => 'Bearer ' . $request->attributes->get('token')->refresh()
+            ]);
+        }
+
+        if($request->get('deleted', false)) {
+            $users = User::whereNotNull('deleted_at');
+        } else {
+            $users = User::whereNull('deleted_at');
+        }
+
+        if($request->get('limit')) {
+            $users->offset((intval($request->get('page', 1)) * intval($request->get('limit'))) - intval($request->get('limit')))->limit(intval($request->get('limit')));
+        }
+
+        $users = $users->get();
+
+        $usersArr = $users->map(function ($user) {
+            return [ 'id' => $user->obfuscateId(), 'email' => $user->email, 'created_at' => $user->created_at->toW3cString() ];
+        });
+
+        return response()->json([
+            'total' => $usersArr->count(),
+            'data'  => $usersArr->toArray()
+        ], 200, [
+            'Authorization' => 'Bearer ' . $request->attributes->get('token')->refresh()
+        ]);
     }
 
 
@@ -52,27 +79,29 @@ class UsersController extends Controller
         ]);
     }
 
+
     /**
      * GET /users/{id}
      * @return array
      */
-    public function show(Request $request, $id) {
-        if($request->attributes->get('token')->user->perm == User::$PERM_NORMAL
-            && $request->attributes->get('token')->user->obfuscateId() != $id) {
-            return response()->json([ 'error' => 'You don\'t have acess to this resource'], 403, [
-                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+    public function show(Request $request, $id)
+    {
+        if ($request->attributes->get('token')->user->perm == User::$PERM_NORMAL && $request->attributes->get('token')->user->obfuscateId() != $id) {
+            return response()->json([ 'error' => 'You don\'t have acess to this resource' ], 403, [
+                'Authorization' => 'Bearer ' . $request->attributes->get('token')->refresh()
             ]);
         }
         $user = User::find(User::getIdFromObfuscation($id));
 
-        if(!$user) {
+        if ( ! $user) {
             return response()->json([ 'error' => 'User not found' ], 404, [
-                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
+                'Authorization' => 'Bearer ' . $request->attributes->get('token')->refresh()
             ]);
         } else {
-            return response()->json([ 'email' => $user->email, 'created_at' => $user->created_at->toW3cString() ], 200, [
-                'Authorization' => 'Bearer '.$request->attributes->get('token')->refresh()
-            ]);
+            return response()->json([ 'email' => $user->email, 'created_at' => $user->created_at->toW3cString() ], 200,
+                [
+                    'Authorization' => 'Bearer ' . $request->attributes->get('token')->refresh()
+                ]);
         }
     }
 }

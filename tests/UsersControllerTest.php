@@ -78,7 +78,7 @@ class UsersControlerTest extends TestCase
         $user = $this->getUser();
         
         $this->get('/api/v1/users/'.$user->obfuscateId(), [
-            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
         ]);
 
         $this->seeStatusCode(200);
@@ -91,7 +91,7 @@ class UsersControlerTest extends TestCase
         $user = $this->getUser();
 
         $this->get('/api/v1/users/'.$userToGet->obfuscateId(), [
-            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
         ]);
 
         $this->seeStatusCode(403);
@@ -107,7 +107,7 @@ class UsersControlerTest extends TestCase
         $accessToken->save();
 
         $this->get('/api/v1/users/'.$user->obfuscateId(), [
-            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '{}', $user->getApiSecret())
         ]);
 
         $this->seeStatusCode(400);
@@ -123,7 +123,7 @@ class UsersControlerTest extends TestCase
         $accessToken->save();
 
         $this->get('/api/v1/users/'.$user->obfuscateId(), [
-            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+            'Authorization' => 'Bearer '.$accessToken->token.':'.hash_hmac('sha1', '{}', $user->getApiSecret())
         ]);
 
         $this->seeStatusCode(200);
@@ -137,10 +137,110 @@ class UsersControlerTest extends TestCase
         $user->save();
 
         $this->get('/api/v1/users/0000000', [
-            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '[]', $user->getApiSecret())
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
         ]);
 
         $this->seeStatusCode(404);
     }
 
+    // List
+    protected function mapUsersList($users) {
+        return $users->map(function($user) {
+            return [ 'id' => $user->obfuscateId(), 'email' => $user->email, 'created_at' => $user->created_at->toW3cString() ];
+        });
+    }
+
+    public function testV1IndexShouldReturnStatusCode200AndArrayOfAllUsersAndTotalCount() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->get('/api/v1/users', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $users = \App\User::whereNull('deleted_at')->get();
+
+        $toCheck = $this->mapUsersList($users);
+
+        $this->seeJsonEquals([
+            'total' => sizeof($users),
+            'data' => $toCheck->toArray()
+        ]);
+        $this->seeStatusCode(200);
+    }
+
+    public function testV1IndexShouldReturnStatusCode200AndArrayOf5FirstUsersAndTotalCount() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->get('/api/v1/users?page=1&limit=5', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{"page":"1","limit":"5"}', $user->getApiSecret())
+        ]);
+
+        $users = \App\User::whereNull('deleted_at')->offset(0)->limit(5)->get();
+
+        $toCheck = $this->mapUsersList($users);
+
+        $this->seeJsonEquals([
+            'total' => sizeof($users),
+            'data' => $toCheck->toArray()
+        ]);
+        $this->seeStatusCode(200);
+    }
+
+    public function testV1IndexShouldReturnStatusCode200AndArrayOf2UsersFromPage3AndTotalCount() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->get('/api/v1/users?page=3&limit=2', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{"page":"3","limit":"2"}', $user->getApiSecret())
+        ]);
+
+        $users = \App\User::whereNull('deleted_at')->offset(4)->limit(2)->get();
+
+        $toCheck = $this->mapUsersList($users);
+
+        $this->seeJsonEquals([
+            'total' => sizeof($users),
+            'data' => $toCheck->toArray()
+        ]);
+        $this->seeStatusCode(200);
+    }
+
+    public function testV1IndexShouldReturnStatusCode200AndArrayOfAllDeletedUsersAndTotalCount() {
+        $user = $this->getUser();
+        $user->deleted_at = \Carbon\Carbon::now();
+        $user->save();
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->get('/api/v1/users?deleted=true', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{"deleted":"true"}', $user->getApiSecret())
+        ]);
+
+        $users = \App\User::whereNotNull('deleted_at')->get();
+
+        $toCheck = $this->mapUsersList($users);
+
+        $this->seeJsonEquals([
+            'total' => sizeof($users),
+            'data' => $toCheck->toArray()
+        ]);
+        $this->seeStatusCode(200);
+    }
+
+    public function testV1IndexShouldReturnStatusCode403IfUserIsForbidden() {
+        $user = $this->getUser();
+
+        $this->get('/api/v1/users', [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+    }
 }
