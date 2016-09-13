@@ -4,9 +4,8 @@ The test was made with Lumen framework, the documentation can be found on the [L
 
 ## Requirements
 
-//1. Como visitante eu devo conseguir criar uma conta utilizando meu email e uma senha, e ao concluir com sucesso meu cadastro devo receber um email de confirmação. 
+1. Como visitante eu devo conseguir criar uma conta utilizando meu email e uma senha, e ao concluir com sucesso meu cadastro devo receber um email de confirmação. 
 2. Como cliente da API eu devo conseguir autenticar utilizando uma API Key e uma Secret Key geradas automaticamente no momento do meu cadastro. 
-
 3. Como cliente da API meu token de acesso deve se renovar a cada 5 minutos, e expirar após 15 minutos de inatividade. 
 4. Como cliente da API eu devo ter um método de lookup, onde posso requisitar a lista de todos os resources e métodos aos quais tenho permissão de acessar. 
 5. Como cliente da API eu não posso ter acesso a nenhum registro que não seja de minha propriedade. 
