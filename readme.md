@@ -21,18 +21,20 @@ All api calls should be prefixed with **/api/v1**
 ## Register user [POST /users]
 + Request (application/json)
 
-    { 
-        "email": "example@example.com",
-        "password": "password#123"
-    }
+        { 
+            "email": "example@example.com",
+            "password": "password#123"
+        }
 
 + Response 201 (application/json)
     
     + Headers
-        Location: /users/4912857
+    
+            Location: /users/4912857
     
     + Body
-        { "created": true }
+    
+            { "created": true }
                 
 ## License
 
