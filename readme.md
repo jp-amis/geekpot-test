@@ -34,7 +34,23 @@ All api calls should be prefixed with **/api/v1**
     + Body
     
             { "created": true }
-                
+
+## Authentication [POST /auth]
+
+The signature on the Authorization header is composed by the API_KEY in sha1 user hmac and API_SECRET as the key
+
++ Request (application/json)
+    + Headers
+        
+        Authorization: Bearer API_KEY:SIGNATURE
+
++ Response 204
+    
+    + Headers
+    
+            Authorization: Bearer ACCESS_TOKEN
+    
+                          
 ## License
 
 GeekPot IT Consulting test and the Lumen framework are open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)

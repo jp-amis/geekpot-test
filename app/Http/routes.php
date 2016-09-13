@@ -1,5 +1,12 @@
 <?php
 
+// Auth
+$app->post('/api/v1/auth', [
+    'as' => 'auth',
+    'uses' => 'AuthController@index'
+]);
+
+// Users
 $app->get('/api/v1/users', [
     'as' => 'users.index',
     'uses' => 'UsersController@index'
@@ -10,7 +17,7 @@ $app->post('/api/v1/users', [
     'uses' => 'UsersController@store'
 ]);
 
-$app->post('/api/v1/users/{id}', [
+$app->get('/api/v1/users/{id}', [
     'as' => 'users.show',
     'uses' => 'UsersController@show'
 ]);

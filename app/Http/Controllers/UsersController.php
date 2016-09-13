@@ -36,7 +36,7 @@ class UsersController extends Controller
         $user           = new User;
         $user->email    = $request->get('email');
         $user->password = Hash::make($request->get('password'));
-        $user->api_key  = Hash::make(uniqid());
+        $user->setApiKey();
         $user->save();
 
         Mail::raw('Hi! Welcome to GeekPot IT Consulting API server.' . PHP_EOL . 'Follow in the the attachment is your credentials.',
