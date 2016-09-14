@@ -243,4 +243,221 @@ class UsersControlerTest extends TestCase
 
         $this->seeStatusCode(403);
     }
+
+    // delete
+    public function testV1DeleteUserShouldReturn200() {
+        $userToDelete = $this->getUser();
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->delete('/api/v1/users/'.$userToDelete->obfuscateId(), [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeJsonEquals(['deleted' => true]);
+    }
+
+    public function testV1DeleteUserShouldReturnForbiddenIfUserTriesToDeleteHimself() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->delete('/api/v1/users/'.$user->obfuscateId(), [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+        $this->seeJsonEquals(['error' => 'You can\'t delete yourself']);
+    }
+
+    public function testV1DeleteUserShouldReturnForbiddenIfUserTriesToDeleteWithoutPermission() {
+        $user = $this->getUser();
+        $user->save();
+
+        $this->delete('/api/v1/users/'.$user->obfuscateId(), [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+    }
+
+    public function testV1DeleteUserShouldReturnNotFoundIfUserTriesToDeleteAInexistentUser() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->delete('/api/v1/users/00000', [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(404);
+    }
+
+    // update
+    public function testV1UpdateUserShouldReturn200() {
+        $userToPatch = $this->getUser();
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $data = [
+            'email' => 'new@example.com',
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/'.$userToPatch->obfuscateId(), $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeJsonEquals(['updated' => true]);
+        $this->seeInDatabase('users', ['id' => $userToPatch->id, 'email' => $data['email']]);
+    }
+
+    public function testV1UpdateNormalUserShouldBeAbleToUpdateHimself() {
+        $user = $this->getUser();
+        $user->save();
+
+        $data = [
+            'email' => 'new_normal@example.com',
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/'.$user->obfuscateId(), $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeJsonEquals(['updated' => true]);
+        $this->seeInDatabase('users', ['id' => $user->id, 'email' => $data['email']]);
+    }
+
+    public function testV1UpdateUserShouldReturnForbiddenIfUserDoesntHavePermission() {
+        $userToPatch = $this->getUser();
+
+        $user = $this->getUser();
+        $user->save();
+
+        $data = [
+            'email' => 'new_fail@example.com',
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/'.$userToPatch->obfuscateId(), $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+    }
+
+    public function testV1UpdateUserShouldReturnNotFoundIfUpdatedUserIsInexistent() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $data = [
+            'email' => 'new_fail_inexistent@example.com',
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/000000', $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(404);
+    }
+
+    public function testV1UpdateUserShouldValidateEmailUniqueIfOtherUserUsesIt() {
+        $userToPatch = $this->getUser();
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->email = "unique@example.com";
+        $user->save();
+
+        $data = [
+            'email' => $user->email,
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/'.$userToPatch->obfuscateId(), $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeJsonEquals(["email" => ["The email has already been taken."]]);
+    }
+
+    public function testV1UpdateUserShouldValidateEmailUniqueIfOtherUserUsesItButNotTheUpdatedUser() {
+        $userToPatch = $this->getUser();
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $data = [
+            'email' => $userToPatch->email,
+            'password' => 'thisIsTheNewPassword'
+        ];
+        $this->patch('/api/v1/users/'.$userToPatch->obfuscateId(), $data, [
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', json_encode($data), $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeInDatabase('users', ['id' => $userToPatch->id, 'email' => $data['email']]);
+    }
+
+    // revoke access
+    public function testV1RevokeAccessUserShouldReturn200() {
+        $userToRevoke = $this->getUser();
+        \App\AccessToken::generate($userToRevoke);
+        \App\AccessToken::generate($userToRevoke);
+        \App\AccessToken::generate($userToRevoke);
+        \App\AccessToken::generate($userToRevoke);
+
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->post('/api/v1/users/'.$userToRevoke->obfuscateId().'/revoke_access', [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(200);
+        $this->seeJsonEquals(['access_revoked' => true]);
+    }
+
+    public function testV1RevokeAccessUserShouldReturnForbiddenIfUserTriesToRevokeHimself() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->post('/api/v1/users/'.$user->obfuscateId().'/revoke_access', [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+        $this->seeJsonEquals(['error' => 'You can\'t revoke your own access']);
+    }
+
+    public function testV1RevokeAccessUserShouldReturnForbiddenIfUserTriesToDeleteWithoutPermission() {
+        $user = $this->getUser();
+        $user->save();
+
+        $this->post('/api/v1/users/'.$user->obfuscateId().'/revoke_access', [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(403);
+    }
+
+    public function testV1RevokeAccessUserShouldReturnNotFoundIfUserTriesToDeleteAInexistentUser() {
+        $user = $this->getUser();
+        $user->perm = \App\User::$PERM_ADMIN;
+        $user->save();
+
+        $this->post('/api/v1/users/00000/revoke_access', [],[
+            'Authorization' => 'Bearer '.\App\AccessToken::generate($user).':'.hash_hmac('sha1', '{}', $user->getApiSecret())
+        ]);
+
+        $this->seeStatusCode(404);
+    }
 }
