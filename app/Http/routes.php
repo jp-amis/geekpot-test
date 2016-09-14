@@ -44,7 +44,7 @@ $app->post('/api/v1/users/{id}/revoke_access', [
 
 // Resources
 $app->get('/api/v1/resources', [
-    //'middleware' => 'authToken',
+    'middleware' => 'authToken',
     'as' => 'resources',
     'uses' => 'ResourcesController@index'
 ]);
