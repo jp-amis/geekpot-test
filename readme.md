@@ -77,6 +77,7 @@ List all users from the database.
 		    Authorization: Bearer API_KEY:SIGNATURE
             
 	+ Query
+	
     		?page=4&limit=3
 
 + Response 200
@@ -86,9 +87,10 @@ List all users from the database.
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{
             	"data": [
-                	{
+              	    {
                     "id": 12415,
                     "email": "example@example.com",
                     "created_at: "1975-12-25T14:15:16-05:00"
@@ -122,6 +124,7 @@ Show data from the user especified in :id
 		    Authorization: Bearer API_KEY:SIGNATURE
             
 	+ Path
+	
     		/12415
 
 + Response 200
@@ -131,6 +134,7 @@ Show data from the user especified in :id
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{            	               
         	    "id": 12415,
     	        "email": "example@example.com",
@@ -153,6 +157,7 @@ Delete the user especified in :id
 		    Authorization: Bearer API_KEY:SIGNATURE
             
 	+ Path
+	
     		/12415
 
 + Response 200
@@ -162,6 +167,7 @@ Delete the user especified in :id
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{            	               
         	    "deleted": true
             }
@@ -187,6 +193,7 @@ Update data from the user especified in :id
     		/12415
             
     + Body
+    
 		    { 
             "email": "example_new@example.com",
             "password": "newPassword#123"
@@ -199,6 +206,7 @@ Update data from the user especified in :id
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{            	               
         	    "updated": true
             }
@@ -229,6 +237,7 @@ Revoke all access tokens from a user
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{            	               
         	    "access_revoked": true
             }
@@ -251,8 +260,9 @@ Get all accessable resources for the user
 		    Authorization: Bearer ACCESS_TOKEN
     
     + Body
+    
     		{
-            "host": "dev.geekpot-test",
+            "host": "dev.geekpot.com.br",
             "basePath": "/api/v1",
             "paths": {
               "/users/461827541": {
