@@ -7,7 +7,7 @@ class UsersControlerTest extends TestCase
     protected function getUser() {
         $user = new \App\User;
         $user->email = uniqid().'@test.com';
-        $user->password = -1;
+        $user->password = \Illuminate\Support\Facades\Hash::make(-1);
         $user->setApiKey();
         $user->save();
 
